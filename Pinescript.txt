@@ -1,0 +1,40 @@
+//@version=4
+strategy("Ichimoku Cloud Strategy", overlay=true)
+
+// Define the Ichimoku parameters
+tenkanSenPeriod = 9
+kijunSenPeriod = 26
+senkouSpanBPeriod = 52
+senkouSpanAPeriod = 26
+chikouSpanOffset = 26
+
+// Calculate the Ichimoku cloud indicators
+tenkanSen = ta.sma(high + low, tenkanSenPeriod) / 2
+kijunSen = ta.sma(high + low, kijunSenPeriod) / 2
+senkouSpanA = ta.sma(high + low, senkouSpanAPeriod) / 2
+senkouSpanB = ta.sma(high + low, senkouSpanBPeriod) / 2
+chikouSpan = close[chikouSpanOffset]
+
+// Determine the overall outlook based on the position of price relative to the cloud
+outlook = ""
+if close > senkouSpanA and close > senkouSpanB
+    outlook := "Positive"
+else if close < senkouSpanA and close < senkouSpanB
+    outlook := "Negative"
+else
+    outlook := "Neutral"
+
+// Define buy and sell conditions
+buyCondition = ta.crossover(tenkanSen, kijunSen) and close > senkouSpanA and outlook == "Positive"
+sellCondition = ta.crossunder(tenkanSen, kijunSen) and close < senkouSpanB and outlook == "Negative"
+
+// Execute trades based on the conditions
+if buyCondition
+    strategy.entry("Buy", strategy.long)
+if sellCondition
+    strategy.entry("Sell", strategy.short)
+
+// Plotting the Ichimoku cloud
+plot(senkouSpanA, "Senkou Span A", color=color.blue, linewidth=2)
+plot(senkouSpanB, "Senkou Span B", color=color.red, linewidth=2)
+fill(senkouSpanA, senkouSpanB, color=color.new(color.blue, 80))
